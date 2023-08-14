@@ -1,0 +1,14 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "appServiceBaseName": { "value": "asp-energyapp-prod-we" },
+    "appServiceBaseSkuName": { "value": "B1" },
+    "webAppName": { "value": "as-energyapi-prod-we" },
+    "environmentName": { "value": "Prod" },
+    "webAppInsightsName": { "value": "ai-energyapi-prod-we" },
+    "functionAppname": { "value": "energy-function-app-prod" },
+    "storageAccountName": { "value": "energyprodsrorage" },
+    "keyvaultName": { "value": "energy-kv-prod" }
+  }
+}

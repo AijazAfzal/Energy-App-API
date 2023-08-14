@@ -1,0 +1,110 @@
+parameters:
+  - name: solution
+    type: string
+  - name: path
+    type: string
+
+steps:
+
+  - task: SonarCloudPrepare@1
+    displayName: 'Prepare analysis configuration'
+    inputs:
+      SonarCloud: 'Sonar_Yaml'
+      organization: 'sturenopenergie'
+      scannerMode: 'MSBuild'
+      projectKey: 'sturenopenergie_EnergyApp_Energie'
+      projectName: 'sturenopenergie_EnergyApp / Energie'
+    
+  - task: UseDotNet@2
+    displayName: 'Use .NET Core sdk'
+    inputs:
+      packageType: 'sdk'
+      version: '6.0.x'
+      includePreviewVersions: true
+
+  - task: DotNetCoreCLI@2
+    displayName: Restore
+    inputs:
+      command: restore
+      projects: '**/*.sln'
+      # selectOrConfig: config
+      # verbosityRestore: Minimal
+      # nugetConfigPath: $(Build.SourcesDirectory)\Nuget.Config
+
+  - task: DotNetCoreCLI@2
+    displayName: Build EnergieServices
+    inputs:
+      projects: ${{ parameters.solution }}
+      #arguments: "--configuration Release --no-restore" 
+      arguments: "--configuration $(buildConfiguration)"  
+
+  
+
+    ##  build function app
+  - task: DotNetCoreCLI@2
+    displayName: Build Azure Functions Service
+    inputs:
+      projects: 'Backend/EnergieService/Energie.FunctionApp/Energie.FunctionApp.csproj'
+      arguments: "--configuration Release --no-restore"
+
+
+
+  - task: DotNetCoreCLI@2
+    displayName: 'Run unit tests'
+    continueOnError: true
+    inputs:
+      command: 'test'
+      projects: '**/*Test.csproj'
+      publishTestResults: true
+      #arguments: '--configuration $(buildConfiguration) --collect:"XPlat Code Coverage"'
+      #codeCoverageEnabled: true
+      arguments: '--collect "Code Coverage"'
+
+  - task: SonarCloudAnalyze@1
+    displayName: 'Run SonarCloud analysis'
+
+  - task: SonarCloudPublish@1
+    displayName: 'Publish results on build summary'   
+
+  - task: CopyFiles@2
+    condition: and(succeeded(), ne(variables['Build.Reason'], 'PullRequest'))
+    displayName: Copy deployment template files to artifacts
+    inputs:
+      SourceFolder: ${{ parameters.path }}
+      Contents: "**/*"
+      TargetFolder: $(Build.ArtifactStagingDirectory)/${{ parameters.path }}/Templates
+
+  - task: DotNetCoreCLI@2
+    condition: and(succeeded(), ne(variables['Build.Reason'], 'PullRequest'))
+    displayName: Publish
+    inputs:
+      command: publish
+      publishWebProjects: false
+      projects: ${{ parameters.solution }}
+      arguments: "--configuration Release --output $(build.artifactstagingdirectory)/${{ parameters.path }}"
+      zipAfterPublish: True
+
+  - task: PublishBuildArtifacts@1
+    condition: and(succeeded(), ne(variables['Build.Reason'], 'PullRequest'))
+    displayName: "Publish Artifact"
+    inputs:
+      PathtoPublish: "$(build.artifactstagingdirectory)/${{ parameters.path }}"
+      ArtifactName: drop
+
+  
+  - task: DotNetCoreCLI@2
+    condition: and(succeeded(), ne(variables['Build.Reason'], 'PullRequest'))
+    displayName: Publish function app
+    inputs:
+      command: publish
+      publishWebProjects: false
+      projects: 'Backend/EnergieService/Energie.FunctionApp/Energie.FunctionApp.csproj'
+      arguments: "--configuration Release --output $(build.artifactstagingdirectory)/${{ parameters.path }}"
+      zipAfterPublish: True
+
+  - task: PublishBuildArtifacts@1
+    condition: and(succeeded(), ne(variables['Build.Reason'], 'PullRequest'))
+    displayName: "Publish function Artifact"
+    inputs:
+      PathtoPublish: "$(build.artifactstagingdirectory)/${{ parameters.path }}"
+      ArtifactName: drop

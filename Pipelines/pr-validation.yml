@@ -1,0 +1,21 @@
+trigger: none
+
+pool:
+  vmImage: "windows-latest"
+
+variables:
+  - name: buildConfiguration
+    value: Release
+
+steps:
+  - template: Templates/build-backend.yml
+    parameters:
+      solution: Backend/EnergieService/Energie.Api/*.csproj
+      path: Backend/EnergieService/Energie.AzureDeployment
+  - template: Templates/validate-resourcegroupdeployment.yml
+    parameters:
+      resourcegroup: EnergieApp
+      path: Backend/EnergieService/Energie.AzureDeployment
+      template: azuredeploy.bicep
+      templateParameters: azuredeploy.parameters.dev.json
+      serviceConnection: Energie-Service-Connection-dev

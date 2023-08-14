@@ -1,0 +1,57 @@
+parameters:
+  - name: serviceConnection
+    type: string
+  - name: subscriptionId
+    type: string
+  - name: resourceGroup
+    type: string
+  - name: env
+    type: string
+    values:
+    - dev
+    - prod
+  - name: webAppName
+    type: string
+  - name: functionAppname
+    type: string
+
+jobs:
+  - deployment: DeployEnergieService
+    displayName: Deploy energie service
+    environment: Energie
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+            - download: current
+              artifact: drop
+              patterns: '**/*'
+            - task: AzureResourceManagerTemplateDeployment@3
+              displayName: "ARM Template deployment: Energie Service"
+              inputs:
+                azureResourceManagerConnection: ${{parameters.serviceConnection}}
+                subscriptionId: ${{parameters.subscriptionId}}
+                resourceGroupName: ${{parameters.resourceGroup}}
+                location: "West Europe"
+                csmFile: "$(Pipeline.Workspace)/drop/Templates/azuredeploy.bicep"
+                csmParametersFile: "$(Pipeline.Workspace)/drop/Templates/azuredeploy.parameters.${{parameters.env}}.json"
+                deploymentOutputs: energieserviceoutput
+
+            - task: AzureRmWebAppDeployment@4
+              displayName: 'Azure App Service Deploy: energie service'
+              inputs:
+                azureSubscription:  ${{parameters.serviceConnection}}
+                DeploymentType: zipDeploy
+                WebAppName: ${{parameters.webAppName}}
+                Package: '$(Pipeline.Workspace)/drop/Energie.Api.zip'
+                enableCustomDeployment: true
+                RemoveAdditionalFilesFlag: true
+
+            - task: AzureRmWebAppDeployment@4
+              displayName: 'Azure Function App Deploy: Functions app'
+              inputs:
+                azureSubscription:  ${{parameters.serviceConnection}}
+                WebAppName: ${{parameters.functionAppname}}
+                Package: '$(Pipeline.Workspace)/drop/Energie.FunctionApp.zip'
+                enableCustomDeployment: true
+                RemoveAdditionalFilesFlag: true

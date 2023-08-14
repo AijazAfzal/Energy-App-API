@@ -1,0 +1,17 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "appServiceBaseName": { "value": "energie" },
+    "appServiceBaseSkuName": { "value": "B1" },
+    "webAppName": { "value": "energie-service-backend" },
+    "environmentName": { "value": "Development" },
+    "webAppInsightsName": { "value": "energie-service-backend-ai" },
+    //"timeforplan": { "value": "0 */2 * * * *" },
+    //"timeforanalysis": { "value": "0 0 9 1-7 12 *" },
+    //"timeformonthlyscore": { "value": "0 0 9 1 * *" },
+    "functionAppname": { "value": "energy-function-app" },
+    "storageAccountName": { "value": "energydevstorage" },
+    "keyvaultName": {"value": "energy-kv-dev"}
+  }
+}

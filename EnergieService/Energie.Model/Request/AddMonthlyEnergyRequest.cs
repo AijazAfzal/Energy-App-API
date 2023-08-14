@@ -1,0 +1,18 @@
+﻿using System;
+using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+using System.Diagnostics.CodeAnalysis;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace Energie.Model.Request
+{
+    [ExcludeFromCodeCoverage]
+    public class AddMonthlyEnergyRequest
+    {
+        [Required(ErrorMessage = "EnergyScore Required")] 
+        [Range(1, 10)]
+        public int EnergyScore { get; set; }
+    }
+}
